@@ -12,8 +12,3 @@ function gramschmidt(us)  # us should be a vector of vectors
     return vs
 end
 
-us = [ [-1.0, 1, -1, 1], [-1.0, 3, -1, 3], [1.0, 3, 5, 7] ]
-us1 = [ [-1.0, 1, -1, 1], [-1.0, 3, -1, 3], [-1.0, 3, -1, 3] ]
-
-vs  = gramschmidt(us)
-vs1 = gramschmidt(us1)
