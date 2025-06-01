@@ -2,8 +2,8 @@
 title: "Rapport de laboratoire 1: méthode de Gram-Schmidt"
 subtitle: "MTH8211"
 author:
-  - name: Votre nom
-    email: votre.adresse@polymtl.ca
+  - name: Oussama Mouhtal
+    email: oussama-2.mouhtal@polymtl.ca
     affiliation:
       - name: Polytechnique Montréal
 format:
@@ -26,27 +26,75 @@ Pkg.activate("rapport_env")    # activate a virtual environment
 
 # Implémentation de Gram-Schmidt classique
 
-<!--
-Inclure la méthode vue en classe dans gram-schmidt.jl et l'afficher ici.
--->
+```{julia}
+using LinearAlgebra
+
+function gramschmidt(us)  # us should be a vector of vectors
+    vs = copy(us)
+    for i = 1 : length(vs)
+        v = vs[i]
+        for j = 1 : i - 1
+           v .-= dot(us[i], vs[j]) .* vs[j]  # here .= indicates in-place update
+        end
+        v ./= norm(v)
+    end
+    return vs
+end
+```
 
 # Illustration de l'échec en cas de dépendance linéaire
 
-<!--
-Proposer un exemple qui met l'implémentation classique en défaut.
-Expliquer la cause de l'échec.
--->
+```{julia}
+us = [ [-1.0, 1, -1, 1], [-1.0, 3, -1, 3], [-1.0, 3, -1, 3] ]
+
+vs  = gramschmidt(us)
+```
+
+# Explication de la cause de l'échec
+
+Comme prévu, l'algorithme renvoie un vecteur dont le dernier élément est un vecteur de NaN, ce qui correspond à l'objet retourné lors d'une opération du type 0/0 (ou d'autres). Cela signifie que la projection orthogonale du dernier vecteur sur les deux premiers est nulle, ce qui indique une dépendance linéaire.
 
 # Implémentation de Gram-Schmidt plus robuste
 
-<!--
-Proposer une manière de vérifier que les vecteurs d'entrée sont linéairement dépendants.
-Votre proposition n'a pas besoin d'être parfaite, mais vous devez discuter ses avantages et inconvénients.
-Implémenter cette méthode dans un fichier gram-schmidt-robuste.jl.
--->
+```{julia}
+function gramschmidtrobust(us)  # us is a vector of vectors
+    vs = Vector{typeof(us[1])}()
+    eps = 1e-18
+
+    for i in 1:length(us)
+        v = copy(us[i])
+        for j in 1:length(vs)
+            v .-= dot(us[i], vs[j]) * vs[j]
+        end
+
+        nrm = norm(v)
+        if nrm > eps
+            push!(vs, v / nrm)
+        end
+    end
+
+    return vs
+  end
+  ```
+
+# Avantages et inconvénients de la nouvelle implémentation
+
+### Test de linéarité par projection orthogonale
+
+Premièrement, le test de linéarité est basé sur la norme de la projection orthogonale d’un vecteur courant. Si cette norme est supérieure à `eps = 1e-18`, alors le vecteur est conservé et ajouté (`push`) au vecteur `vs`, initialisé comme vecteur vide. Sinon, le vecteur est considéré comme nul.
+
+#### Avantages
+
+L’avantage de cette implémentation est qu’elle ne nécessite aucune opération supplémentaire, puisque le test repose sur la norme du vecteur qui est nécessaire pour la normalisation.
+
+#### Inconvénients
+
+L’inconvénient de cette approche est lié aux limites de la méthode de Gram-Schmidt classique : le test sur la norme peut être peu fiable, car la manière dont projeté les vecteurs n'est pas exacte puisque on perte l'orthogonalité à cause des erreurs d'arrondi.
+
 
 # Démonstration de la nouvelle implémentation
 
-<!--
-Inclure ici votre test.jl et l'exécuter.
--->
+```{julia}
+include("test.jl")
+```
+
